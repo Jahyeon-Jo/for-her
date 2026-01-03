@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>For Denise</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --magenta-deep: #c71585; 
+      --pink-vibrant: #ff1493; 
+      --pink-soft: #ff69b4;    
+      --pink-light: #ffb6c1;   
+      
+      --glass: rgba(255, 240, 245, 0.55);
+      --glass-border: rgba(255, 182, 193, 0.6);
+      --shadow-color: rgba(255, 20, 147, 0.25);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cormorant Garamond', serif;
+      background: radial-gradient(ellipse at center, var(--pink-light) 0%, var(--pink-soft) 60%, var(--magenta-deep) 100%);
+      background-size: 200% 200%;
+      animation: backgroundPulse 25s ease-in-out infinite, backgroundMorph 40s ease-in-out infinite;
+    }
+
+    @keyframes backgroundPulse {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes backgroundMorph {
+      0% { filter: hue-rotate(0deg); }
+      33% { filter: hue-rotate(15deg); }
+      66% { filter: hue-rotate(-10deg); }
+      100% { filter: hue-rotate(0deg); }
+    }
+
+    /* Texture overlay */
+    body::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #particle-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    /* Cursor trail */
+    .cursor-trail {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: var(--pink-vibrant);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 5;
+      opacity: 0;
+      animation: trailFade 0.8s ease-out forwards;
+    }
+
+    @keyframes trailFade {
+      0% { opacity: 0.8; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0); }
+    }
+
+    /* === The Main Card === */
+    .card {
+      position: relative;
+      z-index: 10;
+      width: 85%;
+      max-width: 550px;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      
+      background: var(--glass);
+      backdrop-filter: blur(25px) saturate(180%);
+      -webkit-backdrop-filter: blur(25px) saturate(180%);
+      border: 2px solid var(--glass-border);
+      border-radius: 40px;
+      box-shadow: 
+        0 30px 60px var(--shadow-color),
+        inset 0 0 20px rgba(255, 255, 255, 0.5);
+      
+      padding: 50px 30px;
+      transform: translateY(30px) scale(0.95);
+      opacity: 0;
+      animation: cardEntrance 1.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      transition: all 0.5s ease;
+    }
+
+    .card.hidden {
+      opacity: 0;
+      transform: scale(0.8);
+      pointer-events: none;
+    }
+
+    @keyframes cardEntrance {
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .title-container {
+       opacity: 0;
+       transform: translateY(20px);
+       transition: all 1s ease 0.2s;
+       margin-bottom: 5px;
+    }
+
+    .title {
+      font-size: clamp(3rem, 8vw, 5rem);
+      line-height: 0.9;
+      background: linear-gradient(45deg, var(--magenta-deep), var(--pink-vibrant));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: var(--pink-vibrant);
+    }
+
+    .subtitle {
+      font-family: 'Dancing Script', cursive;
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      color: var(--magenta-deep);
+      margin-top: 10px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 1s ease 0.5s;
+    }
+
+    .btn-reveal {
+      margin-top: 40px;
+      padding: 18px 45px;
+      font-size: 1.3rem;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: white;
+      background: linear-gradient(135deg, var(--pink-soft) 0%, var(--pink-vibrant) 50%, var(--magenta-deep) 100%);
+      background-size: 200% auto;
+      border: none;
+      border-radius: 60px;
+      cursor: pointer;
+      box-shadow: 0 15px 35px var(--shadow-color);
+      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+      position: absolute;
+      z-index: 20;
+      filter: drop-shadow(0 0 0px var(--pink-vibrant));
+      animation: gentleGlow 3s ease-in-out infinite;
+    }
+    
+    .btn-reveal:hover {
+      background-position: right center;
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 25px 50px var(--shadow-color);
+      filter: drop-shadow(0 0 25px var(--pink-vibrant));
+      animation: intenseGlow 1s ease-in-out infinite;
+    }
+
+    @keyframes gentleGlow {
+      0%, 100% { filter: drop-shadow(0 0 5px var(--pink-vibrant)); }
+      50% { filter: drop-shadow(0 0 15px var(--pink-vibrant)); }
+    }
+
+    @keyframes intenseGlow {
+      0%, 100% { filter: drop-shadow(0 0 20px var(--pink-vibrant)); }
+      50% { filter: drop-shadow(0 0 30px var(--pink-vibrant)); }
+    }
+
+    .card.open .title-container { opacity: 1; transform: translateY(0); }
+    .card.open .subtitle { opacity: 1; transform: translateY(0); }
+    .card.open .btn-reveal { opacity: 0; pointer-events: none; transform: scale(0.5); }
+
+    /* === The Gift Button === */
+    .gift-btn-container {
+        margin-top: 30px;
+        opacity: 0;
+        transform: scale(0);
+        transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        pointer-events: none;
+    }
+
+    .gift-btn-container.visible {
+        opacity: 1;
+        transform: scale(1);
+        pointer-events: auto;
+    }
+
+    .gift-btn {
+        background: none;
+        border: none;
+        font-size: 5rem;
+        cursor: pointer;
+        filter: drop-shadow(0 0 20px rgba(255, 20, 147, 0.6));
+        animation: heartbeat 1.5s infinite ease-in-out, giftGlow 2s ease-in-out infinite;
+        transition: transform 0.3s, filter 0.3s;
+    }
+    
+    .gift-btn:hover {
+        transform: scale(1.2);
+        filter: drop-shadow(0 0 35px rgba(255, 20, 147, 0.9));
+        animation: heartbeat 0.8s infinite ease-in-out, giftGlowIntense 1s ease-in-out infinite;
+    }
+
+    @keyframes giftGlow {
+      0%, 100% { filter: drop-shadow(0 0 15px rgba(255, 20, 147, 0.5)); }
+      50% { filter: drop-shadow(0 0 25px rgba(255, 20, 147, 0.7)); }
+    }
+
+    @keyframes giftGlowIntense {
+      0%, 100% { filter: drop-shadow(0 0 30px rgba(255, 20, 147, 0.8)); }
+      50% { filter: drop-shadow(0 0 45px rgba(255, 20, 147, 1)); }
+    }
+    
+    .click-me-text {
+        font-family: 'Dancing Script', cursive;
+        font-size: 1.2rem;
+        color: var(--magenta-deep);
+        margin-top: -10px;
+        opacity: 0.8;
+    }
+
+    @keyframes heartbeat {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    /* === The Long Message Modal === */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 1s ease;
+        backdrop-filter: blur(5px);
+    }
+
+    .modal-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .letter-card {
+        background: rgba(255, 250, 250, 0.95);
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+        padding: 40px;
+        border-radius: 30px;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+        overflow-y: auto;
+        transform: translateY(50px);
+        transition: transform 1s ease;
+        text-align: left;
+        border: 1px solid var(--pink-light);
+    }
+
+    /* Custom scrollbar */
+    .letter-card::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .letter-card::-webkit-scrollbar-track {
+        background: rgba(255, 182, 193, 0.2);
+        border-radius: 10px;
+    }
+
+    .letter-card::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, var(--pink-soft), var(--magenta-deep));
+        border-radius: 10px;
+    }
+
+    .letter-card::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, var(--pink-vibrant), var(--magenta-deep));
+    }
+
+    .modal-overlay.active .letter-card {
+        transform: translateY(0);
+    }
+
+    .letter-text {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.3rem;
+        line-height: 1.6;
+        color: #4a4a4a;
+        white-space: pre-wrap;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    
+    .letter-text.revealed {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .close-note {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        font-size: 0.9rem;
+        color: var(--pink-soft);
+        font-style: italic;
+    }
+
+    /* Particles CSS - with depth layers */
+    .particle { position: absolute; opacity: 0; pointer-events: none; }
+    .particle.layer-back { z-index: 1; filter: blur(1px); }
+    .particle.layer-mid { z-index: 2; }
+    .particle.layer-front { z-index: 3; }
+    
+    .heart-shape { width: 20px; height: 20px; background: var(--pink-vibrant); transform: rotate(45deg); }
+    .heart-shape::before, .heart-shape::after { content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%; background: var(--pink-vibrant); }
+    .heart-shape::before { left: -10px; }
+    .heart-shape::after { top: -10px; }
+    .petal-shape { width: 25px; height: 25px; background: var(--pink-light); border-radius: 50% 0 50% 50%; }
+    .float-up { animation: floatUp linear forwards; }
+    .burst-out { animation: burstOut cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
+    @keyframes floatUp { 0% { transform: translateY(110vh) rotate(0deg) scale(0.5); opacity: 0; } 20% { opacity: 0.6; } 100% { transform: translateY(-20vh) rotate(360deg) scale(1); opacity: 0; } }
+    @keyframes burstOut { 0% { transform: translate(0,0) scale(0.5) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(var(--rot)); opacity: 0; } }
+    
+    #player { position: absolute; top: -9999px; left: -9999px; }
+
+  </style>
+</head>
+<body>
+
+  <div id="particle-container"></div>
+  <div id="player"></div>
+
+  <div class="card" id="card">
+    <div class="title-container">
+       <h1 class="title">I love you,&nbsp;<br> Denise</h1>
+    </div>
+    <p class="subtitle">Always.</p>
+
+    <div class="gift-btn-container" id="giftContainer">
+        <button class="gift-btn" id="giftBtn">💝</button>
+        <span class="click-me-text">For you</span>
+    </div>
+
+    <button class="btn-reveal" id="revealBtn">To you</button>
+  </div>
+
+  <div class="modal-overlay" id="messageModal">
+      <div class="letter-card" id="letterCard">
+          <div class="letter-text" id="letterText">
+            
+            My Dearest Denise,
+
+            From the moment I met you, my life has been brighter. 
+            I just wanted to take a moment to tell you how much you mean to me.
+            
+            You are the song in my heart and the reason I smile. 
+            Every day with you is a gift I cherish. 
+
+            I love you more than words can say.
+
+            </div>
+          <span class="close-note">Playing: Happiness - Rex Orange County</span>
+      </div>
+  </div>
+
+
+  <script>
+    const container = document.getElementById('particle-container');
+    const revealBtn = document.getElementById('revealBtn');
+    const giftContainer = document.getElementById('giftContainer');
+    const giftBtn = document.getElementById('giftBtn');
+    const messageModal = document.getElementById('messageModal');
+    const card = document.getElementById('card');
+    const letterText = document.getElementById('letterText');
+    let isFloating = true;
+
+    // --- Cursor Trail Effect ---
+    let lastTrailTime = 0;
+    document.addEventListener('mousemove', (e) => {
+      const now = Date.now();
+      if (now - lastTrailTime < 50) return; // Throttle to every 50ms
+      lastTrailTime = now;
+
+      const trail = document.createElement('div');
+      trail.className = 'cursor-trail';
+      trail.style.left = e.clientX + 'px';
+      trail.style.top = e.clientY + 'px';
+      document.body.appendChild(trail);
+      
+      setTimeout(() => trail.remove(), 800);
+    });
+
+    // --- YouTube API ---
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    var player;
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('player', {
+        height: '0',
+        width: '0',
+        videoId: 'dstuitW8PWM', 
+        playerVars: { 'playsinline': 1, 'controls': 0, 'loop': 1 }
+      });
+    }
+
+    // --- Particles with Depth Layers ---
+    function createShapeType(layer) {
+      const shape = document.createElement('div');
+      shape.classList.add('particle', layer);
+      if (Math.random() > 0.5) {
+        shape.classList.add('heart-shape');
+        shape.style.backgroundColor = `var(--pink-vibrant)`;
+      } else {
+        shape.classList.add('petal-shape');
+        const shades = ['var(--pink-light)', 'var(--pink-soft)'];
+        shape.style.backgroundColor = shades[Math.floor(Math.random() * shades.length)];
+      }
+      return shape;
+    }
+
+    function createFloatingParticle() {
+        if (!isFloating || container.childElementCount > 40) return;
+        
+        // Randomly assign depth layer
+        const layers = ['layer-back', 'layer-mid', 'layer-front'];
+        const layer = layers[Math.floor(Math.random() * layers.length)];
+        const particle = createShapeType(layer);
+        
+        particle.classList.add('float-up');
+        
+        // Different speeds for different layers (parallax effect)
+        let duration;
+        if (layer === 'layer-back') duration = Math.random() * 10 + 18; // Slower
+        else if (layer === 'layer-mid') duration = Math.random() * 8 + 14; // Medium
+        else duration = Math.random() * 6 + 10; // Faster
+        
+        const size = Math.random() * 0.8 + 0.4;
+        particle.style.transform = `scale(${size})`;
+        particle.style.left = `${Math.random() * 100}vw`;
+        particle.style.animationDuration = `${duration}s`;
+        container.appendChild(particle);
+        setTimeout(() => { particle.remove(); }, duration * 1000);
+    }
+    
+    function burstParticles() {
+        for (let i = 0; i < 60; i++) {
+          const particle = createShapeType('layer-front');
+          particle.classList.add('burst-out');
+          particle.classList.remove('petal-shape');
+          particle.classList.add('heart-shape');
+          particle.style.left = `50%`;
+          particle.style.top = `50%`;
+          const tx = (Math.random() - 0.5) * 800;
+          const ty = (Math.random() - 0.5) * 800;
+          const rot = Math.random() * 720 - 360;
+          particle.style.setProperty('--tx', `${tx}px`);
+          particle.style.setProperty('--ty', `${ty}px`);
+          particle.style.setProperty('--rot', `${rot}deg`);
+          particle.style.animationDuration = `${Math.random() * 1.5 + 0.8}s`;
+          container.appendChild(particle);
+          setTimeout(() => particle.remove(), 2500);
+      }
+    }
+
+    // --- Interaction Step 1: Reveal "I love you" ---
+    revealBtn.addEventListener('click', () => {
+      card.classList.add('open');
+      isFloating = false; 
+      burstParticles();
+      setTimeout(() => { isFloating = true; }, 2000);
+
+      // Start the 5-second timer for the Gift
+      setTimeout(() => {
+        giftContainer.classList.add('visible');
+      }, 5000);
+    });
+
+    // --- Interaction Step 2: Click Gift -> Music + Message ---
+    giftBtn.addEventListener('click', () => {
+        // 1. Play Music
+        if (player && player.playVideo) {
+            player.setVolume(80);
+            player.playVideo();
+        }
+        
+        // 2. Hide the main card to reduce clutter (optional, looks cleaner)
+        card.classList.add('hidden');
+
+        // 3. Show the Long Message Modal
+        messageModal.classList.add('active');
+        
+        // 4. Trigger scroll reveal
+        setTimeout(() => {
+          letterText.classList.add('revealed');
+        }, 300);
+        
+        // 5. Another burst of hearts for effect
+        burstParticles();
+    });
+
+    setInterval(createFloatingParticle, 600);
+    for(let i=0; i<15; i++) createFloatingParticle();
+
+  </script>
+
+</body>
+</html>
